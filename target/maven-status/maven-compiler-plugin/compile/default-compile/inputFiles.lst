@@ -2,6 +2,9 @@ D:\upgrad\imagehoster\src\main\java\ImageHoster\repository\TagRepository.java
 D:\upgrad\imagehoster\src\main\java\ImageHoster\controller\ImageController.java
 D:\upgrad\imagehoster\src\main\java\ImageHoster\model\User.java
 D:\upgrad\imagehoster\src\main\java\ImageHoster\controller\UserController.java
+D:\upgrad\imagehoster\src\main\java\ImageHoster\model\Comment.java
+D:\upgrad\imagehoster\src\main\java\ImageHoster\service\CommentService.java
+D:\upgrad\imagehoster\src\main\java\ImageHoster\repository\CommentRepository.java
 D:\upgrad\imagehoster\src\main\java\ImageHoster\repository\UserRepository.java
 D:\upgrad\imagehoster\src\main\java\ImageHoster\model\Image.java
 D:\upgrad\imagehoster\src\main\java\ImageHoster\service\TagService.java

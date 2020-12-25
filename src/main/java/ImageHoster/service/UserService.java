@@ -31,5 +31,32 @@ public class UserService {
             return null;
         }
     }
+    
+    //We are verifying the password strength in this method by checking through the conditions 
+    //3 checks are conducted for alphabets, numbers and special characters respectively
+	public boolean verifyPasswordStrength(String password) {
+		// TODO Auto-generated method stub
+		boolean isAlphabet = false;
+		boolean isNumber = false;
+		boolean isSpecial = false;
+		int asciiOfCharacter;
+		for(char character : password.toCharArray()) {
+			asciiOfCharacter = (int)character;
+			if(isAlphabet && isNumber && isSpecial)
+				break;
+			if(asciiOfCharacter>=48 && asciiOfCharacter<=57) {
+				isNumber = true;
+			}
+			else if((asciiOfCharacter>=65 && asciiOfCharacter<=90) || (asciiOfCharacter>=97 && asciiOfCharacter<=122)) {
+				isAlphabet = true;
+			}
+			else {
+				isSpecial = true;
+			}
+		}
+		if(isAlphabet && isNumber && isSpecial)
+			return true;
+		return false;
+	}
 
 }

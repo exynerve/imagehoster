@@ -1,8 +1,10 @@
 package ImageHoster.controller;
 
+import ImageHoster.model.Comment;
 import ImageHoster.model.Image;
 import ImageHoster.model.Tag;
 import ImageHoster.model.User;
+import ImageHoster.service.CommentService;
 import ImageHoster.service.ImageService;
 import ImageHoster.service.TagService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.*;
 
 @Controller
@@ -26,6 +29,9 @@ public class ImageController {
 
     @Autowired
     private TagService tagService;
+    
+    @Autowired
+    private CommentService commentService;
 
     //This method displays all the images in the user home page after successful login
     @RequestMapping("images")
@@ -48,8 +54,10 @@ public class ImageController {
     @RequestMapping("/images/{imageId}/{title}")
     public String showImage(@PathVariable("title") String title,@PathVariable("imageId") Integer imageId ,Model model) {
         Image image = imageService.getImageByTitle(imageId, title);
+        List<Comment> comments = commentService.getCommentsForImage(image);
         model.addAttribute("image", image);
         model.addAttribute("tags", image.getTags());
+        model.addAttribute("comments", comments);
         return "images/image";
     }
 
@@ -92,12 +100,20 @@ public class ImageController {
     //The method first needs to convert the list of all the tags to a string containing all the tags separated by a comma and then add this string in a Model type object
     //This string is then displayed by 'edit.html' file as previous tags of an image
     @RequestMapping(value = "/editImage")
-    public String editImage(@RequestParam("imageId") Integer imageId, Model model) {
+    public String editImage(@RequestParam("imageId") Integer imageId, Model model, HttpSession session) {
+    	
         Image image = imageService.getImage(imageId);
-
+        User user = (User) session.getAttribute("loggeduser");
         String tags = convertTagsToString(image.getTags());
         model.addAttribute("image", image);
         model.addAttribute("tags", tags);
+        
+    	if(!(user.getId()==image.getUser().getId())) {
+    		String error = "Only the owner of the image can edit the image";
+        	model.addAttribute("editError", error);
+        	
+        	return "images/image";
+        }
         return "images/edit";
     }
 
@@ -124,15 +140,16 @@ public class ImageController {
         else {
             updatedImage.setImageFile(updatedImageData);
         }
-
+        
         updatedImage.setId(imageId);
         User user = (User) session.getAttribute("loggeduser");
+        
         updatedImage.setUser(user);
         updatedImage.setTags(imageTags);
         updatedImage.setDate(new Date());
 
         imageService.updateImage(updatedImage);
-        return "redirect:/images/" + updatedImage.getTitle();
+        return "redirect:/images/" + updatedImage.getId() + "/" +updatedImage.getTitle();
     }
 
 
@@ -140,9 +157,39 @@ public class ImageController {
     //The method calls the deleteImage() method in the business logic passing the id of the image to be deleted
     //Looks for a controller method with request mapping of type '/images'
     @RequestMapping(value = "/deleteImage", method = RequestMethod.DELETE)
-    public String deleteImageSubmit(@RequestParam(name = "imageId") Integer imageId) {
+    public String deleteImageSubmit(@RequestParam(name = "imageId") Integer imageId, Model model, HttpSession session) {
+    	
+    	Image image = imageService.getImage(imageId);
+        User user = (User) session.getAttribute("loggeduser");
+        String tags = convertTagsToString(image.getTags());
+        model.addAttribute("image", image);
+        model.addAttribute("tags", tags);
+        
+    	if(!(user.getId()==image.getUser().getId())) {
+    		String delete = "Only the owner of the image can delete the image";
+        	model.addAttribute("deleteError", delete);
+        	return "images/image";
+        }
         imageService.deleteImage(imageId);
         return "redirect:/images";
+    }
+    
+    
+//    This controller method is called to add comments on an uploaded image
+//    This method calls the addComment() method in the business logic passing the comment object and persisting in the database
+//    Looks for the controller method with request mapping onf type 'images/{imageId}/{imageTitle}'
+    @RequestMapping(value= "/image/{imageId}/{imageTitle}/comments", method = RequestMethod.POST)
+    public String addCommentToImage(@PathVariable(name = "imageId") Integer imageId, @RequestParam(name = "comment") String comment,  HttpSession session) {
+    	Image image = imageService.getImage(imageId);
+        User user = (User) session.getAttribute("loggeduser");
+        Comment newComment = new Comment();
+        newComment.setUser(user);
+        newComment.setImage(image);
+        newComment.setText(comment);
+        newComment.setCreatedDate(LocalDate.now());
+        commentService.addComment(newComment);
+        
+        return "redirect:/images/"+imageId+"/"+image.getTitle();
     }
 
 
